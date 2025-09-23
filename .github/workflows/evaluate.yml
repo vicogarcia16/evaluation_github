@@ -51,7 +51,7 @@ jobs:
           output_path: ${{ env.OUTPUT_PATH }}
 
       - name: Upload Evaluation Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: evaluation-results
           path: ${{ env.OUTPUT_PATH }}

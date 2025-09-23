@@ -32,7 +32,7 @@ jobs:
       - name: Install GenAI Evals
         run: |
           python -m pip install --upgrade pip
-          pip install ./_actions/microsoft/genai-evals/main
+          pip install git+https://github.com/microsoft/genai-evals.git
 
       - name: Write evaluate config 
         run: | 

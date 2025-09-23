@@ -1,3 +1,27 @@
-{"query":"What is the capital of France?","response":"Paris.","description":"\"Pregunta sobre capitales de países\""}
-{"query":"Who developed the theory of relativity?","response":"Albert Einstein.","description":"\"Pregunta sobre física e historia de la ciencia\""}
-{"query":"Explain why water boils at 100°C.","response":"Because water reaches its boiling point at 100°C under normal atmospheric pressure.","description":"\"Pregunta sobre conceptos de física y química\""}
+{
+  "query": "What is the capital of France?",
+  "response": "Paris.",
+  "description": {
+    "context": {
+      "system-prompt": "Simple trivia questions"
+    }
+  }
+}
+{
+  "query": "Who developed the theory of relativity?",
+  "response": "Albert Einstein.",
+  "description": {
+    "context": {
+      "system-prompt": "Physics trivia"
+    }
+  }
+}
+{
+  "query": "Explain why water boils at 100°C.",
+  "response": "Because water reaches its boiling point at 100°C under normal atmospheric pressure.",
+  "description": {
+    "context": {
+      "system-prompt": "Basic science explanation"
+    }
+  }
+}

@@ -46,6 +46,7 @@ jobs:
         uses: microsoft/genai-evals@main 
         with: 
           evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}
+          show-summary: false
 
       - name: Upload Evaluation Results
         run: python -m ai_evaluate_action \

@@ -60,7 +60,7 @@ jobs:
           python -m ai_evaluate_action \
             --action-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
             --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
-            --output-path "${{ env.OUTPUT_PATH }}"
+            --summary "${{ env.OUTPUT_PATH }}"
 
       - name: Upload results
         uses: actions/upload-artifact@v4

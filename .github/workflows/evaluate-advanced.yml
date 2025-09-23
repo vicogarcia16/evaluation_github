@@ -1,0 +1,134 @@
+name: Evaluate AI Responses (Advanced - Two Models)
+
+on: 
+  workflow_dispatch:
+
+permissions: 
+  id-token: write 
+  contents: read 
+
+jobs:
+  evaluate: 
+    runs-on: ubuntu-latest 
+    env: 
+      # Config for the final evaluation action
+      GENAI_EVALS_CONFIG_PATH: ${{ github.workspace }}/evaluate-config.json 
+      GENAI_EVALS_DATA_PATH: ${{ github.workspace }}/data/eval-input-generated.jsonl
+
+      # Secrets for the JUDGE model (used by genai-evals action)
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}
+
+      # Secrets for the CHAT model endpoint (the one being evaluated)
+      API_URL: ${{ secrets.API_URL }}
+      API_TOKEN: ${{ secrets.API_TOKEN }}
+
+    steps: 
+      - uses: actions/checkout@v4 
+      
+      - uses: azure/login@v2 
+        with: 
+          client-id: ${{ secrets.OIDC_AZURE_CLIENT_ID }} 
+          tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }} 
+          subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      - name: Generate AI responses from custom endpoint
+        run: |
+          python -c '''
+          import os
+          import json
+          import uuid
+          import requests
+
+          print("Starting response generation script from custom endpoint...")
+
+          api_url = os.environ["API_URL"]
+          api_token = os.environ["API_TOKEN"]
+          
+          headers = {
+              "Authorization": f"Bearer {api_token}",
+              "Content-Type": "application/json"
+          }
+
+          input_file_path = "data/eval-input.jsonl"
+          output_file_path = os.environ["GENAI_EVALS_DATA_PATH"]
+
+          print(f"Reading from {input_file_path} and writing to {output_file_path}")
+
+          with open(input_file_path, "r", encoding="utf-8") as infile, \
+               open(output_file_path, "w", encoding="utf-8") as outfile:
+              for line in infile:
+                  try:
+                      input_data = json.loads(line.strip())
+                      question = input_data["query"]
+                      user_account_id = input_data["user_account_id"]
+                      session_id = str(uuid.uuid4())
+
+                      payload = {
+                          "question": question,
+                          "account_id": user_account_id,
+                          "session_id": session_id
+                      }
+
+                      print(f"Generating response for query: {question[:50]}...")
+                      
+                      response = requests.post(api_url, json=payload, headers=headers, timeout=120)
+                      response.raise_for_status() # Raise an exception for bad status codes
+                      
+                      # We assume the endpoint returns a JSON response.
+                      # The entire JSON response is stored as a string in the 'response' field.
+                      # If the actual text response is inside a specific key,
+                      # you might need to change this line to something like:
+                      # response_text = response.json()['key']
+                      response_text = json.dumps(response.json())
+
+                      print("...response generated.")
+
+                      output_data = input_data.copy()
+                      output_data["response"] = response_text
+                      outfile.write(json.dumps(output_data) + "\n")
+
+                  except Exception as e:
+                      print(f"Error processing line: {line.strip()}. Error: {e}")
+                      output_data = input_data.copy()
+                      output_data["response"] = f"Error generating response: {e}"
+                      outfile.write(json.dumps(output_data) + "\n")
+
+          print("Finished generating responses.")
+          '''
+      
+      - name: Write evaluate config
+        run: | 
+          cat > ${{ env.GENAI_EVALS_CONFIG_PATH }} <<'EOF'
+          {
+            "data": "${{ env.GENAI_EVALS_DATA_PATH }}",
+            "evaluators": {
+              "coherence": "CoherenceEvaluator",
+              "fluency": "FluencyEvaluator"
+            },
+            "ai_model_configuration": {
+              "type": "azure_openai",
+              "azure_endpoint": "${{ env.AZURE_OPENAI_ENDPOINT }}",
+              "azure_deployment": "${{ env.AZURE_OPENAI_CHAT_DEPLOYMENT }}",
+              "api_key": "${{ env.AZURE_OPENAI_API_KEY }}",
+              "api_version": "${{ env.AZURE_OPENAI_API_VERSION }}"
+            }
+          }
+          EOF
+
+      - name: Run AI Evaluation
+        id: run-ai-evaluation
+        uses: microsoft/genai-evals@main
+        with:
+          evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results-advanced
+          path: /home/runner/work/_actions/microsoft/genai-evals/main/results.jsonl

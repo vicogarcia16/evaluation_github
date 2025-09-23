@@ -49,9 +49,7 @@ jobs:
               "azure_deployment": "${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}",
               "api_key": "${{ secrets.AZURE_OPENAI_API_KEY }}",
               "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}"
-            },
-            "show_raw_output": false,
-            "show_summary": false
+            }
           }
           EOF
 

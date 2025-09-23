@@ -47,6 +47,7 @@ jobs:
         with: 
           evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}
           show-raw-output: false
+          show-summary: false
 
       - name: Save results
         run: cp ./_actions/microsoft/genai-evals/main/results.jsonl ${{ env.OUTPUT_PATH }}

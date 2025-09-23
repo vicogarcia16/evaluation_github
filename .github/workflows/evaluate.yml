@@ -46,3 +46,9 @@ jobs:
         uses: microsoft/genai-evals@main
         with:
           evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}
+
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results
+          path: /home/runner/work/_actions/microsoft/genai-evals/main/results.jsonl

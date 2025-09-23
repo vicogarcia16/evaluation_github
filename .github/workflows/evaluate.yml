@@ -28,19 +28,12 @@ jobs:
           {
             "data": "${{ env.GENAI_EVALS_DATA_PATH }}",
             "evaluators": {
-              "coherence": {
-                "type": "CoherenceEvaluator",
-                "mapping": {
-                  "question": "${data.query}",
-                  "answer": "${output.response}"
-                }
-              },
-              "fluency": {
-                "type": "FluencyEvaluator",
-                "mapping": {
-                  "answer": "${output.response}"
-                }
-              }
+              "coherence": "CoherenceEvaluator",
+              "fluency": "FluencyEvaluator"
+            },
+            "mapping": {
+              "question": "${data.query}",
+              "answer": "${output.response}"
             },
             "ai_model_configuration": {
               "type": "azure_openai",

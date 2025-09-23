@@ -49,9 +49,7 @@ jobs:
               "azure_deployment": "${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}",
               "api_key": "${{ secrets.AZURE_OPENAI_API_KEY }}",
               "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}"
-            },
-            "show_raw_output": false,
-            "show_summary": false
+            }
           }
           EOF
 
@@ -59,8 +57,9 @@ jobs:
         run: |
           python -m ai_evaluate_action \
             --action-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
-            --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}"
-            --summary "${{ env.OUTPUT_PATH }}"
+            --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
+            --no-summary \
+            > "${{ env.OUTPUT_PATH }}"
 
       - name: Upload results
         uses: actions/upload-artifact@v4

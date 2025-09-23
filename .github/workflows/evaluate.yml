@@ -25,7 +25,7 @@ jobs:
           subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
       - name: Write evaluate config 
         run: | 
-          cat > ${{ env.GENAI_EVALS_CONFIG_PATH }} <<EOF 
+          cat > ${{ env.GENAI_EVALS_CONFIG_PATH }} <<EOF
           { 
             "data": "${{ env.GENAI_EVALS_DATA_PATH }}", 
             "evaluators": { 
@@ -40,17 +40,14 @@ jobs:
               "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}" 
             } 
           } 
-          EOF 
-      
+          EOF
       - name: Run AI Evaluation 
         id: run-ai-evaluation 
         uses: microsoft/genai-evals@main 
         with: 
           evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}
-          output_path: ${{ env.OUTPUT_PATH }}
 
       - name: Upload Evaluation Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: evaluation-results
-          path: ${{ env.OUTPUT_PATH }}
+        run: python -m ai_evaluate_action \
+            --evaluate-configuration "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
+            > "${{ env.OUTPUT_PATH }}"

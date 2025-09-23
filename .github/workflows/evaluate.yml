@@ -11,22 +11,100 @@ jobs:
   evaluate: 
     runs-on: ubuntu-latest 
     env: 
-      GENAI_EVALS_CONFIG_PATH: ${{ github.workspace }}/evaluate-config.json 
+      # Original input data
       GENAI_EVALS_DATA_PATH: ${{ github.workspace }}/data/eval-input.jsonl
+      # New generated file with responses
+      GENERATED_DATA_PATH: ${{ github.workspace }}/data/eval-input-generated.jsonl
+      # Config file for the final evaluation action
+      GENAI_EVALS_CONFIG_PATH: ${{ github.workspace }}/evaluate-config.json 
     steps: 
       - uses: actions/checkout@v4 
       
       - uses: azure/login@v2 
         with: 
-          client-id: ${{ secrets.OIDC_AZURE_CLIENT_ID }} 
-          tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }} 
+          client-id: ${{ secrets.OIDC_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
 
+      - name: Install dependencies
+        run: pip install openai "pydantic>=2.0"
+
+      - name: Generate AI responses
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}
+        run: |
+          python -c '''
+          import os
+          import json
+          from openai import AzureOpenAI
+
+          print("Starting response generation script...")
+
+          # Get credentials from environment variables
+          azure_endpoint = os.environ["AZURE_OPENAI_ENDPOINT"]
+          api_key = os.environ["AZURE_OPENAI_API_KEY"]
+          api_version = os.environ["AZURE_OPENAI_API_VERSION"]
+          azure_deployment = os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"]
+
+          # Initialize the client
+          client = AzureOpenAI(
+              azure_endpoint=azure_endpoint,
+              api_key=api_key,
+              api_version=api_version,
+          )
+
+          SYSTEM_PROMPT = """
+          Eres un asistente de IA especializado en dar estadísticas de una empresa.
+          Sé conciso y directo en tus respuestas. Responde siempre en español.
+          """
+
+          input_file_path = os.environ["GENAI_EVALS_DATA_PATH"]
+          output_file_path = os.environ["GENERATED_DATA_PATH"]
+
+          print(f"Reading from {input_file_path}")
+          print(f"Writing to {output_file_path}")
+
+          with open(input_file_path, "r", encoding="utf-8") as infile, \
+               open(output_file_path, "w", encoding="utf-8") as outfile:
+              for line in infile:
+                  try:
+                      input_data = json.loads(line.strip())
+                      query = input_data["query"]
+
+                      messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": query}]
+
+                      print(f"Generating response for query: {query[:50]}...")
+                      completion = client.chat.completions.create(
+                          model=azure_deployment,
+                          messages=messages,
+                          temperature=0.7,
+                          max_tokens=800,
+                      )
+                      response_text = completion.choices[0].message.content.strip()
+                      print("...response generated.")
+
+                      output_data = input_data.copy()
+                      output_data["response"] = response_text
+                      outfile.write(json.dumps(output_data) + "\n")
+
+                  except Exception as e:
+                      print(f"Error processing line: {line.strip()}. Error: {e}")
+                      output_data = input_data.copy()
+                      output_data["response"] = f"Error generating response: {e}"
+                      outfile.write(json.dumps(output_data) + "\n")
+
+          print("Finished generating responses.")
+          '''
+
+      # This step now points to the NEW generated data file
       - name: Write evaluate config 
         run: | 
           cat > ${{ env.GENAI_EVALS_CONFIG_PATH }} <<'EOF'
           {
-            "data": "${{ env.GENAI_EVALS_DATA_PATH }}",
+            "data": "${{ env.GENERATED_DATA_PATH }}",
             "evaluators": {
               "coherence": "CoherenceEvaluator",
               "fluency": "FluencyEvaluator"

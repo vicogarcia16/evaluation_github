@@ -1,3 +1,3 @@
-{"query":"What is the capital of France?","response":"Paris.","description":"\"What is the capital of France?\""}
-{"query":"Who developed the theory of relativity?","response":"Albert Einstein.","description":"\"Who developed the theory of relativity?\""}
-{"query":"Explain why water boils at 100C.","response":"Because water reaches its boiling point at 100C under normal atmospheric pressure.","description":"\"Explain why water boils at 100C.\""}
+{"query":"What is the capital of France?","response":"Paris.","context":"-","description":"{\"context\": {\"system-prompt\": \"default\"}}"}
+{"query":"Who developed the theory of relativity?","response":"Albert Einstein.","context":"-","description":"{\"context\": {\"system-prompt\": \"default\"}}"}
+{"query":"Explain why water boils at 100C.","response":"Because water reaches its boiling point at 100C under normal atmospheric pressure.","context":"-","description":"{\"context\": {\"system-prompt\": \"default\"}}"}

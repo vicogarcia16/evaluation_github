@@ -1,4 +1,3 @@
-
 name: Evaluate AI Responses
 
 on: 
@@ -15,6 +14,7 @@ jobs:
       GENAI_EVALS_CONFIG_PATH: ${{ github.workspace }}/evaluate-config.json 
       GENAI_EVALS_DATA_PATH: ${{ github.workspace }}/data/eval-input.jsonl
       OUTPUT_PATH: ${{ github.workspace }}/evaluation-results.json
+
     steps: 
       - uses: actions/checkout@v4 
       
@@ -23,29 +23,42 @@ jobs:
           client-id: ${{ secrets.OIDC_AZURE_CLIENT_ID }} 
           tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }} 
           subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install GenAI Evals
+        run: |
+          python -m pip install --upgrade pip
+          pip install genai-evals
+
       - name: Write evaluate config 
         run: | 
           cat > ${{ env.GENAI_EVALS_CONFIG_PATH }} <<EOF
-          { 
-            "data": "${{ env.GENAI_EVALS_DATA_PATH }}", 
-            "evaluators": { 
-              "coherence": "CoherenceEvaluator", 
-              "fluency": "FluencyEvaluator" 
-            }, 
-            "ai_model_configuration": { 
-              "type": "azure_openai", 
-              "azure_endpoint": "${{ secrets.AZURE_OPENAI_ENDPOINT }}", 
-              "azure_deployment": "${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}", 
-              "api_key": "${{ secrets.AZURE_OPENAI_API_KEY }}", 
-              "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}" 
-            } 
-          } 
+          {
+            "data": "${{ env.GENAI_EVALS_DATA_PATH }}",
+            "evaluators": {
+              "coherence": "CoherenceEvaluator",
+              "fluency": "FluencyEvaluator"
+            },
+            "ai_model_configuration": {
+              "type": "azure_openai",
+              "azure_endpoint": "${{ secrets.AZURE_OPENAI_ENDPOINT }}",
+              "azure_deployment": "${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}",
+              "api_key": "${{ secrets.AZURE_OPENAI_API_KEY }}",
+              "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}"
+            }
+          }
           EOF
-      - name: Run AI Evaluation 
+
+      - name: Run AI Evaluation
         run: |
           python -m ai_evaluate_action \
             --evaluate-configuration "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
             --show-raw-output false \
             --show-summary false
+
       - name: Save results
         run: cp ./_actions/microsoft/genai-evals/main/results.jsonl ${{ env.OUTPUT_PATH }}

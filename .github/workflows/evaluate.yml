@@ -61,8 +61,11 @@ jobs:
             --action-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
             --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}"
 
-      - name: Save results
-        run: echo "${{ steps.eval.outputs.results }}" > ${{ env.OUTPUT_PATH }}
+      - name: Find results file
+        run: |
+          RESULTS_PATH=$(find . -name "results.jsonl" | head -n 1)
+          echo "Found results file at $RESULTS_PATH"
+          cp "$RESULTS_PATH" "${{ env.OUTPUT_PATH }}"
 
       - name: Upload results
         uses: actions/upload-artifact@v4

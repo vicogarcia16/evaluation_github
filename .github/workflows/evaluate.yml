@@ -22,16 +22,6 @@ jobs:
           tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }} 
           subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-
-      - name: Install GenAI Evals
-        run: |
-          python -m pip install --upgrade pip
-          pip install git+https://github.com/microsoft/genai-evals.git
-
       - name: Write evaluate config 
         run: | 
           cat > ${{ env.GENAI_EVALS_CONFIG_PATH }} <<EOF
@@ -47,14 +37,12 @@ jobs:
               "azure_deployment": "${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}",
               "api_key": "${{ secrets.AZURE_OPENAI_API_KEY }}",
               "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}"
-            },
-            "show_raw_output": false,
-            "show_summary": false
+            }
           }
           EOF
 
       - name: Run AI Evaluation
-        run: |
-          python -m ai_evaluate_action \
-            --action-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
-            --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}"
+        id: run-ai-evaluation
+        uses: microsoft/genai-evals@main
+        with:
+          evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}

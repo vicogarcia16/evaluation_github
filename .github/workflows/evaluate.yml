@@ -49,7 +49,9 @@ jobs:
               "azure_deployment": "${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}",
               "api_key": "${{ secrets.AZURE_OPENAI_API_KEY }}",
               "api_version": "${{ secrets.AZURE_OPENAI_API_VERSION }}"
-            }
+            },
+            "show_raw_output": false,
+            "show_summary": false
           }
           EOF
 
@@ -57,9 +59,7 @@ jobs:
         run: |
           python -m ai_evaluate_action \
             --action-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
-            --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
-            --show-raw-output false \
-            --show-summary false
+            --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}"
 
       - name: Save results
         run: cp ./_actions/microsoft/genai-evals/main/results.jsonl ${{ env.OUTPUT_PATH }}

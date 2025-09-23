@@ -46,9 +46,7 @@ jobs:
         uses: microsoft/genai-evals@main 
         with: 
           evaluate-configuration: ${{ env.GENAI_EVALS_CONFIG_PATH }}
-          show-summary: false
+          show-raw-output: false
 
-      - name: Upload Evaluation Results
-        run: python -m ai_evaluate_action \
-            --evaluate-configuration "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
-            > "${{ env.OUTPUT_PATH }}"
+      - name: Save results
+        run: cp ./_actions/microsoft/genai-evals/main/results.jsonl ${{ env.OUTPUT_PATH }}

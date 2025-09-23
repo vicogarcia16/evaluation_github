@@ -63,3 +63,9 @@ jobs:
 
       - name: Save results
         run: echo "${{ steps.run-ai-evaluation.outputs.results }}" > ${{ env.OUTPUT_PATH }}
+
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: evaluation-results
+          path: ${{ env.OUTPUT_PATH }}

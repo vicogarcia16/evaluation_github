@@ -56,7 +56,8 @@ jobs:
       - name: Run AI Evaluation
         run: |
           python -m ai_evaluate_action \
-            --evaluate-configuration "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
+            --action-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
+            --evaluate-config "${{ env.GENAI_EVALS_CONFIG_PATH }}" \
             --show-raw-output false \
             --show-summary false
 
